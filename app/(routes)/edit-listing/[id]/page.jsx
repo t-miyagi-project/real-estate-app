@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
@@ -17,12 +17,17 @@ import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/utils/supabase/client'
 import { toast } from 'sonner'
 import { useUser } from '@clerk/nextjs'
+import FileUpload from '@/app/(routes)/edit-listing/_components/FileUpload'
+import { Loader } from 'lucide-react'
 
 
-function EditListing({params}) {
+function EditListing({ params }) {
 
   const { user } = useUser();
   const router = useRouter();
+  const [listing, setListing] = useState([]);
+  const [images, setImages] = useState([]);
+  const [loading,setLoading]=useState(false);
 
   useEffect(() => {
     user && verifyUserRecord();
@@ -31,9 +36,14 @@ function EditListing({params}) {
   const verifyUserRecord = async () => {
     const { data, error } = await supabase
       .from('listing')
-      .select('*')
+      .select('*,listingImages(listing_id,url)')
       .eq('createdBy', user?.primaryEmailAddress.emailAddress)
       .eq('id', params.id);
+
+    if (data) {
+      console.log(data);
+      setListing(data[0]);
+    }
 
     if (data?.length <= 0) {
       router.replace('/');
@@ -41,18 +51,47 @@ function EditListing({params}) {
   };
 
   //formの情報から、同一のIDのレコードを更新する
-  const onSubmitHandler = async (formValue)=>{
-    
+  const onSubmitHandler = async (formValue) => {
+    setLoading(true);
+
     const { data, error } = await supabase
       .from('listing')
       .update(formValue)
       .eq('id', params.id)
       .select();
 
-      if (data){
-        console.log(data);
-        toast('更新完了');
+    if (data) {
+      toast('更新完了');
+    }
+
+    for (const image of images) {
+      const file = image;
+      const fileName = Date.now().toString();
+      const fileExt = fileName.split('.').pop();
+      const { data, error } = await supabase.storage
+        .from('listingImages')
+        .upload(`${fileName}`, file, {
+          contentType: `image/${fileExt}`,
+          upsert: false
+        });
+      if (error) {
+        setLoading(false);
+        toast('error')
+      } else {
+        const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL + fileName;
+        const { data, error } = await supabase
+          .from('listingImages')
+          .insert([
+            { url: imageUrl,listing_id:params?.id }
+          ])
+          .select();
+
+          if(error){
+            setLoading(false);
+          }
       }
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,10 +100,11 @@ function EditListing({params}) {
       <Formik
         initialValues={{
           type: '',
-          propertyType: ''
+          propertyType: '',
+          profileImage: user?.imageUrl,
+          fullName: user?.fullName
         }}
         onSubmit={(values) => {
-          console.log(values);
           onSubmitHandler(values);
         }}
       >
@@ -78,8 +118,9 @@ function EditListing({params}) {
               <div className='grid grid-cols-1 md:grid-cols-3'>
                 <div className='flex flex-col gap-2'>
                   <h2 className='text-lg text-slate-500'>Rent or Sell?</h2>
-                  <RadioGroup defaultValue="Sell"
+                  <RadioGroup
                     onValueChange={(v) => values.type = v}
+                    defaultValue={listing?.type}
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="Rent" id="Rent" />
@@ -95,9 +136,11 @@ function EditListing({params}) {
                   <h2 className='text-lg text-slate-500'>Property Type</h2>
                   <Select
                     onValueChange={(e) => values.propertyType = e}
-                    name="propertyType">
+                    name="propertyType"
+                    defaultValue={listing?.propertyType}
+                  >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Property Type" />
+                      <SelectValue placeholder={listing?.propertyType ? listing?.propertyType : "Select Property Type"} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Single Family House">Single Family House</SelectItem>
@@ -111,53 +154,81 @@ function EditListing({params}) {
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10'>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>Bedroom</h2>
-                  <Input type="number" placeholder="Ex.2" name="bedroom" onChange={handleChange} />
+                  <Input type="number" placeholder="Ex.2"
+                    defaultValue={listing?.bedroom}
+                    name="bedroom" onChange={handleChange}
+                  />
                 </div>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>Bathroom</h2>
-                  <Input type="number" placeholder="Ex.2" name="bathroom" onChange={handleChange} />
+                  <Input type="number" placeholder="Ex.2"
+                    defaultValue={listing?.bathroom}
+                    name="bathroom" onChange={handleChange} />
                 </div>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>Built In</h2>
-                  <Input type="number" placeholder="Ex. 1900 Sq. ft" name="builtIn" onChange={handleChange} />
+                  <Input type="number" placeholder="Ex. 1900 Sq. ft"
+                    defaultValue={listing?.builtIn}
+                    name="builtIn" onChange={handleChange} />
                 </div>
               </div>
 
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10'>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>Parking</h2>
-                  <Input type="number" placeholder="Ex. 1900 Sq. ft" name="parking" onChange={handleChange} />
+                  <Input type="number" placeholder="Ex. 1900 Sq. ft"
+                    defaultValue={listing?.parking}
+                    name="parking" onChange={handleChange} />
                 </div>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>Lot Size</h2>
-                  <Input type="number" placeholder="Ex. 1900" name="lotSize" onChange={handleChange} />
+                  <Input type="number" placeholder="Ex. 1900"
+                    defaultValue={listing?.lotSize}
+                    name="lotSize" onChange={handleChange} />
                 </div>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>Area</h2>
-                  <Input type="number" placeholder="Ex. 1900 Sq. ft" name="area" onChange={handleChange} />
+                  <Input type="number" placeholder="Ex. 1900 Sq. ft"
+                    defaultValue={listing?.area}
+                    name="area" onChange={handleChange} />
                 </div>
               </div>
 
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10'>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>Selling Price</h2>
-                  <Input type="number" placeholder="400000" name="price" onChange={handleChange} />
+                  <Input type="number" placeholder="400000"
+                    defaultValue={listing?.price}
+                    name="price" onChange={handleChange} />
                 </div>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>HOA</h2>
-                  <Input type="number" placeholder="100" name="hoa" onChange={handleChange} />
+                  <Input type="number" placeholder="100"
+                    defaultValue={listing?.hoa}
+                    name="hoa" onChange={handleChange} />
                 </div>
               </div>
 
               <div className='grid grid-cols-1 gap-10'>
                 <div className='flex gap-2 flex-col'>
                   <h2 className='text-gray-500'>Description</h2>
-                  <Textarea placeholder="" name="description" onChange={handleChange} />
+                  <Textarea placeholder=""
+                    defaultValue={listing?.description}
+                    name="description" onChange={handleChange} />
                 </div>
               </div>
+              <div>
+                <h2 className='text-gray-500'>アップロード画像</h2>
+                <FileUpload 
+                setImages={(value) => setImages(value)}
+                imageList={listing.listingImages}
+                />
+              </div>
               <div className='flex gap-7 justify-end'>
-                <Button variant="outline" className="text-primary border-purple-500">moforu</Button>
-                <Button className="">Save & Publish</Button>
+                <Button variant="outline" className="text-primary border-purple-500">Save</Button>
+                <Button disabled={loading} className="">
+                  {loading?<Loader className="animate-spin"/>:'Save & Publish'}
+                </Button>
               </div>
 
             </div>

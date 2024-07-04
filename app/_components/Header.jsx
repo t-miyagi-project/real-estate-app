@@ -22,7 +22,7 @@ function Header() {
           <Link href={'/'}>
             <li className={`'hover:text-primary 
               font-medium text-sm cursor-pointer'
-              ${path=='/'&&'text-primary'}`}>For Sale
+              ${path=='/'&&'text-primary'}`}>For Sell
             </li>
           </Link>
           <li className='hover:text-primary 

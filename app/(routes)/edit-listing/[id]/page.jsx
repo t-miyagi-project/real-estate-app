@@ -19,6 +19,18 @@ import { toast } from 'sonner'
 import { useUser } from '@clerk/nextjs'
 import FileUpload from '@/app/(routes)/edit-listing/_components/FileUpload'
 import { Loader } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 
 function EditListing({ params }) {
@@ -27,7 +39,7 @@ function EditListing({ params }) {
   const router = useRouter();
   const [listing, setListing] = useState([]);
   const [images, setImages] = useState([]);
-  const [loading,setLoading]=useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     user && verifyUserRecord();
@@ -62,9 +74,11 @@ function EditListing({ params }) {
 
     if (data) {
       toast('更新完了');
+      setLoading(false);
     }
 
     for (const image of images) {
+      setLoading(true);
       const file = image;
       const fileName = Date.now().toString();
       const fileExt = fileName.split('.').pop();
@@ -77,22 +91,40 @@ function EditListing({ params }) {
       if (error) {
         setLoading(false);
         toast('error')
-      } else {
+      }
+      else {
         const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL + fileName;
         const { data, error } = await supabase
           .from('listingImages')
           .insert([
-            { url: imageUrl,listing_id:params?.id }
+            { url: imageUrl, listing_id: params?.id }
           ])
           .select();
-
-          if(error){
-            setLoading(false);
-          }
+        if (data) {
+          setLoading(true);
+        }
+        if (error) {
+          setLoading(false);
+        }
       }
       setLoading(false);
     }
   };
+
+  const publishBtnHandler = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('listing')
+      .update({ active: true })
+      .eq('id', params?.id)
+      .select()
+
+      if(data){
+        setLoading(false);
+        toast('公開');
+      }
+
+  }
 
   return (
     <div className='px-10 md:px-36 my-10'>
@@ -219,22 +251,44 @@ function EditListing({ params }) {
               </div>
               <div>
                 <h2 className='text-gray-500'>アップロード画像</h2>
-                <FileUpload 
-                setImages={(value) => setImages(value)}
-                imageList={listing.listingImages}
+                <FileUpload
+                  setImages={(value) => setImages(value)}
+                  imageList={listing.listingImages}
                 />
               </div>
               <div className='flex gap-7 justify-end'>
-                <Button variant="outline" className="text-primary border-purple-500">Save</Button>
-                <Button disabled={loading} className="">
-                  {loading?<Loader className="animate-spin"/>:'Save & Publish'}
+                <Button disabled={loading} variant="outline" className="text-primary border-purple-500">
+                  {loading ? <Loader className="animate-spin" /> : 'Save'}
                 </Button>
-              </div>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" disabled={loading} className="">
+                      {loading ? <Loader className="animate-spin" /> : 'Save & Publish'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Ready to Publish?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        公開しますか?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={()=>publishBtnHandler()} >
+                        {loading? <Loader className='animate-spin'/>:'OK'}
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
             </div>
+
+          </div>
           </form>)}
-      </Formik>
-    </div>
+    </Formik>
+    </div >
   )
 }
 

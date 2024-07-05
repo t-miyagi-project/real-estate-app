@@ -1,10 +1,34 @@
-import { Bath, BedDouble, MapPin, Ruler } from 'lucide-react'
+import GoogleAddressSearch from '@/app/_components/GoogleAddressSearch'
+import { Button } from '@/components/ui/button'
+import { Bath, BedDouble, MapPin, Ruler, Search } from 'lucide-react'
 import Image from 'next/image'
-import React from 'react'
+import React, { useState } from 'react'
 
-function Listing({ listing }) {
+function Listing({ listing, handlSearchClick, searchedAddress }) {
+  const [address, setAddress] = useState();
   return (
     <div>
+      <div className='p-3 flex gap-6'>
+        <GoogleAddressSearch
+          selectedAddress={(v) => { searchedAddress(v); setAddress(v) }}
+          setCoordinates={(v) => console.log(v)}
+        />
+        <Button className="flex gap-2"
+          onClick={handlSearchClick}
+        >
+          <Search className='h-4 w-4' />
+          Serach
+        </Button>
+      </div>
+      {address && <div className='px-3 my-5'>
+        <h2 className='text-xl'>
+          Found <span className='font-bold'>{listing?.length}</span> Result in
+          <span className='text-primary font-bold'> 
+          {address?.label}
+          </span>
+        </h2>
+      </div>}
+
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         {listing?.length > 0 ? listing.map((item, index) => (
           <div className='p-3 hover:border hover:border-primary cursor-pointer rounded-lg'>

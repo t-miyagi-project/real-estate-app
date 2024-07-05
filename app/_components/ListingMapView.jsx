@@ -4,37 +4,37 @@ import { supabase } from '@/utils/supabase/client'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner';
 
-function ListingMapView({type}) {
+function ListingMapView({ type }) {
 
-  const [listing,setListing]=useState([]);
+  const [listing, setListing] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     getLatestListing();
-  },[])
+  }, [])
 
-  const getLatestListing=async ()=>{
-    const {data,error}=await supabase
-    .from('listing')
-    .select(`*,listingImages(
+  const getLatestListing = async () => {
+    const { data, error } = await supabase
+      .from('listing')
+      .select(`*,listingImages(
       url,
       listing_id
       )`)
-      .eq('active',true)
-      .eq('type',type)
-      .order('id',{ascending:false})
+      .eq('active', true)
+      .eq('type', type)
+      .order('id', { ascending: false })
 
-      if(data){
-        setListing(data);
-        console.log(data)
-      }
-      if(error){
-        toast('ServerError');
-      }
+    if (data) {
+      setListing(data);
+      console.log(data)
+    }
+    if (error) {
+      toast('ServerError');
+    }
   }
   return (
     <div className='grid grid-cols-1 md:grid-cols-2'>
       <div>
-        <Listing listing={listing}/>
+        <Listing listing={listing} />
       </div>
       <div>
         Map

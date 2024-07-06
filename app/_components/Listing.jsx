@@ -12,7 +12,8 @@ function Listing({
   setBathCount,
   setBedCount,
   setParkingCount,
-  setHomeType
+  setHomeType,
+  setCoordinates
  }) {
   const [address, setAddress] = useState();
   return (
@@ -20,7 +21,7 @@ function Listing({
       <div className='p-3 flex gap-6'>
         <GoogleAddressSearch
           selectedAddress={(v) => { searchedAddress(v); setAddress(v) }}
-          setCoordinates={(v) => console.log(v)}
+          setCoordinates={setCoordinates}
         />
         <Button className="flex gap-2"
           onClick={handlSearchClick}

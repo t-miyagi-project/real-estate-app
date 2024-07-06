@@ -1,10 +1,19 @@
+import FillterSection from '@/app/_components/FillterSection'
 import GoogleAddressSearch from '@/app/_components/GoogleAddressSearch'
 import { Button } from '@/components/ui/button'
 import { Bath, BedDouble, MapPin, Ruler, Search } from 'lucide-react'
 import Image from 'next/image'
 import React, { useState } from 'react'
 
-function Listing({ listing, handlSearchClick, searchedAddress }) {
+function Listing({ 
+  listing, 
+  handlSearchClick, 
+  searchedAddress,
+  setBathCount,
+  setBedCount,
+  setParkingCount,
+  setHomeType
+ }) {
   const [address, setAddress] = useState();
   return (
     <div>
@@ -20,6 +29,12 @@ function Listing({ listing, handlSearchClick, searchedAddress }) {
           Serach
         </Button>
       </div>
+        <FillterSection
+        setBedCount={setBedCount}
+        setBathCount={setBathCount}
+        setParkingCount={setParkingCount}
+        setHomeType={setHomeType}
+        />
       {address && <div className='px-3 my-5'>
         <h2 className='text-xl'>
           Found <span className='font-bold'>{listing?.length}</span> Result in

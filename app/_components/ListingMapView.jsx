@@ -91,6 +91,7 @@ function ListingMapView({ type }) {
       <div className='fixed right-10 h-full 
       md:w-[350px] lg:w-[450px] xl:w-[650px]'>
         <GoogleMapSection 
+        listing={listing}
         coordinates={coordinates}
         />
       </div>

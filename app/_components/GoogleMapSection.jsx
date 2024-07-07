@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import MarkerItem from '@/app/_components/MarkerItem';
 
 const containerStyle = {
   width: '100%',
@@ -8,7 +9,7 @@ const containerStyle = {
   borderRadius:10
 };
 
-function GoogleMapSection({coordinates}) {
+function GoogleMapSection({coordinates,listing}) {
   
   const [center,setCenter]=useState({
     lat: -3.745,
@@ -46,7 +47,12 @@ function GoogleMapSection({coordinates}) {
         onUnmount={onUnmount}
       >
         { /* Child components, such as markers, info windows, etc. */ }
-        <></>
+        {listing.map((item,index)=>(
+          <MarkerItem
+          key={index}
+          item={item}
+          />
+        ))}
       </GoogleMap>
     </div>
   )

@@ -25,8 +25,12 @@ function Header() {
               ${path=='/'&&'text-primary'}`}>For Sell
             </li>
           </Link>
-          <li className='hover:text-primary 
-          font-medium text-sm cursor-pointer'>For Rent</li>
+          <Link href={'/rent'}>
+            <li className={`'hover:text-primary 
+              font-medium text-sm cursor-pointer'
+              ${path=='/rent'&&'text-primary'}`}>For Rent
+            </li>
+          </Link>
           <li className='hover:text-primary font-medium text-sm cursor-pointer'>Agent Finder</li>
         </ul>
       </div>

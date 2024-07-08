@@ -2,7 +2,7 @@
 const nextConfig = {
   //TODO 画像表示でエラーが出る場合はここにドメインを入れる。
   images:{
-    domains:['zjshalqixqnshgtssjzk.supabase.co']
+    domains:['zjshalqixqnshgtssjzk.supabase.co','img.clerk.com']
   }
 };
 

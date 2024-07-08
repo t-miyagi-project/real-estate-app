@@ -3,6 +3,7 @@ import GoogleAddressSearch from '@/app/_components/GoogleAddressSearch'
 import { Button } from '@/components/ui/button'
 import { Bath, BedDouble, MapPin, Ruler, Search } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import React, { useState } from 'react'
 
 function Listing({ 
@@ -47,6 +48,7 @@ function Listing({
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         {listing?.length > 0 ? listing.map((item, index) => (
+          <Link href={'/view-listing/'+item.id}>
           <div className='p-3 hover:border hover:border-primary cursor-pointer rounded-lg'>
             <Image src={item.listingImages[0].url}
               width={800}
@@ -78,6 +80,7 @@ function Listing({
               </div>
             </div>
           </div>
+          </Link>
         ))
           //仮のマップでスケルトン
           : [1, 2, 3, 4, 5, 6, 7, 8].map((item, index) => (
